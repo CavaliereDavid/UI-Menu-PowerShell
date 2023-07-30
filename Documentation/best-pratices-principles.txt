@@ -1,0 +1,93 @@
+In this file We are going to provide an explanation on the guidelines that I used in my code in order to apply the best practices in powershell. 
+These guidelines can be found here: https://github.com/PoshCode/PowerShellPracticeAndStyle .
+
+Applied principles in my code:
+
+NAMING CONVENTIONS 
+1. Use the full name of each command.
+2. Use full parameter names.
+3. Use full, explicit paths when possible.
+4. Avoid the use of ~ to represent the home folder.
+
+FUNCTION STRUCTURE
+1. Avoid using the return keyword in your functions
+2. Use the format of <verb>-<noun> for naming advanced Functions and scripts
+3. Use  Get-Verb for a list of approved verbs
+4. In Advanced Functions do not use the keyword return to return an object
+5. In Advanced Functions you return objects inside the Process {} block and not in Begin {} or End {} since it defeats the advantage of the pipeline.
+6. When a ParameterSetName is used in any of the parameters, always provide a DefaultParameterSetName in the CmdletBinding attribute
+7. When using advanced functions or scripts with CmdletBinding attribute avoid validating parameters in the body of the script when possible and use parameter validation attributes instead.
+
+TYPE OF VALIDATIONS:
+1. AllowNull Validation Attribute: The AllowNull attribute allows the value of a mandatory parameter to be null ($null).
+2. AllowEmptyString Validation Attribute: The AllowEmptyString attribute allows the value of a mandatory parameter to be an empty string ("").
+3. AllowEmptyCollection Validation Attribute: The AllowEmptyCollection attribute allows the value of a mandatory parameter to be an empty collection (@()).
+4. ValidateCount Validation Attribute: The ValidateCount attribute specifies the minimum and maximum number of parameter values that a parameter accepts. 
+   PowerShell generates an error if the number of parameter values in the command that calls the function is outside that range.
+5. ValidateLength Validation Attribute: The ValidateLength attribute specifies the minimum and maximum number of characters in a parameter or variable value. 
+   PowerShell generates an error if the length of a value specified for a parameter or a variable is outside of the range.
+6. ValidatePattern Validation Attribute: The ValidatePattern attribute specifies a regular expression that is compared to the parameter or variable value. 
+   PowerShell generates an error if the value does not match the regular expression pattern.
+7. ValidateRange Validation Attribute: The ValidateRange attribute specifies a numeric range for each parameter or variable value. PowerShell generates an error if any value is outside that range.
+8. ValidateScript Validation Attribute: The ValidateScript attribute specifies a script that is used to validate a parameter or variable value. 
+   PowerShell pipes the value to the script, and generates an error if the script returns "false" or if the script throws an exception.
+   When you use the ValidateScript attribute, the value that is being validated is mapped to the $_ variable. You can use the $_ variable to refer to the value in the script.
+9. ValidateSet Attribute: The ValidateSet attribute specifies a set of valid values for a parameter or variable. PowerShell generates an error if a parameter or variable value does not match a value in the set.
+10.ValidateNotNull Validation Attribute: The ValidateNotNull attribute specifies that the parameter value cannot be null ($null). PowerShell generates an error if the parameter value is null.
+11.ValidateNotNullOrEmpty Validation Attribute: The ValidateNotNullOrEmpty attribute specifies that the parameter value cannot be null ($null) and cannot be an empty string (""). 
+   PowerShell generates an error if the parameter is used in a function call, but its value is null, an empty string, or an empty array.
+
+BUILDING REUSABLE TOOLS
+
+Decide whether you're coding a 'tool' or a 'controller' script:
+
+1. Some scripts contain tools, which are meant to be reusable. These are typically functions or advanced functions, and they are typically contained in a script module or in a function library of some kind. 
+   These tools are designed for a high level of reuse.
+2. Some scripts are controllers, meaning they are intended to utilize one or more tools (functions, commands, etc) to automate a specific business process. 
+   A controller script is not intended to be reusable; it is intended to make use of reuse by leveraging functions and other commands.
+
+Make your code modular:
+
+1. Generally, people tend to feel that most working code - that is, your code which does things - should be modularized into functions and ideally stored in script modules.
+   That makes those functions more easily reused. Those functions should exhibit a high level of reusability, such as accepting input only via parameters and producing output only as objects to the pipeline
+
+Make tools as re-usable as possible:
+
+1. Tools should accept input from parameters and should (in most cases) produce any output to the pipeline; this approach helps maximize reusability.
+
+Use PowerShell standard cmdlet naming:
+
+1. Use the verb-noun convention, and use the PowerShell standard verbs.
+2. You can get a list of the verbs by typing 'get-verb' at the command line.
+
+Use PowerShell standard parameter naming:
+
+1. Tools should be consistent with PowerShell native cmdlets in regard to parameter naming.
+
+Tools should output raw data: 
+1. The community generally agrees that tools should output raw data. That is, their output should be manipulated as little as possible. 
+   If a tool retrieves information represented in bytes, it should output bytes, rather than converting that value to another unit of measure. 
+   Having a tool output less-manipulated data helps the tool remain reusable in a larger number of situations.
+
+Controllers should typically output formatted data:
+1. Controllers, on the other hand, may reformat or manipulate data because controllers do not aim to be reusable; they instead aim to do as good a job as possible at a particular task.
+
+Use native PowerShell where possible:
+
+1. This means not using COM, .NET Framework classes, and so on when there is a native Windows PowerShell command or technique that gets the job done.
+   Wrap other tools in an advanced function or cmdlet:
+   That said, you truly become a better PowerShell person if you take the time to wrap a less-preferred way in an advanced function or cmdlet. 
+   Then you get the best of both worlds: the ability to reach outside the shell itself for functionality, while keeping the advantages of native commands.
+
+
+
+
+
+
+
+
+
+
+
+
+
