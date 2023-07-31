@@ -6,5 +6,3 @@ There are going to be multiple commits in order to keep track of the code being 
 3. Added a try catch block as a scriptblock
 4. Added validation method in order to improve readability and avoid redundancy in folder-utils.
 
-In the first commmit We have already upgraded our code by adding cmdLetBinding and by adding try catch block to better handle errors. 
-In the second commit We are going to Invoke a method to do the try, catch in order to improve the readability of the code and avoid using repetitive code.
