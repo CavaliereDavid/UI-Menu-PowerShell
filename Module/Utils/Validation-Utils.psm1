@@ -1,15 +1,3 @@
-<#
-Check if a folder exists
-Test-PathExists -Path "C:\Users\cavaliered\Desktop\a" -DirectoryOnly
-
-Check if a file exists
-Test-PathExists -Path "C:\Users\cavaliered\Desktop\a\example.txt" -FileOnly
-
-Check if a .zip file exists
-Test-PathExists -Path "C:\Users\cavaliered\Desktop\a\example.zip" -ZipFileOnly
-
-#> 
-
 function Test-PathExists {
     [CmdletBinding()]
     param (

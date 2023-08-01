@@ -1,5 +1,5 @@
-Import-Module -Name ".\ReusableTools\Utils\Invoke-Safe.psm1" -Force
-Import-Module -Name ".\ReusableTools\Utils\Validation-Utils.psm1" -Force
+Import-Module -Name ".\Module\Utils\Invoke-Safe.psm1" -Force
+Import-Module -Name ".\Module\Utils\Validation-Utils.psm1" -Force
 
 function New-Folder {
     [CmdletBinding()]
@@ -185,7 +185,15 @@ function Compress-Folder {
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [string]
-        $FolderPath
+        $FolderPath,
+
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]
+        $CompressionType,
+
+        [Parameter(Mandatory = $true, Position = 2)]
+        [string]
+        $DestinationPath
     )
 
     Process {
@@ -194,13 +202,35 @@ function Compress-Folder {
                 Write-Host "Folder not found: $FolderPath"
                 return
             }
-            $ArchivePath = Join-Path -Path (Split-Path -Parent $FolderPath) -ChildPath "$([System.IO.Path]::GetFileNameWithoutExtension($FolderPath)).zip"
-            Compress-Archive -Path $FolderPath -DestinationPath $ArchivePath
+
+            if (-not (Test-PathExists -Path $DestinationPath -DirectoryOnly)) {
+                Write-Host "Destination folder does not exist: $DestinationPath"
+                return
+            }
+
+            $ArchiveName = [System.IO.Path]::GetFileNameWithoutExtension($FolderPath)
+            $Extension = $null
+
+            switch ($CompressionType.ToLower()) {
+                "zip" { $Extension = ".zip" }
+                "7z" { $Extension = ".7z" }
+                # Add more cases for other supported compression types as needed
+                default {
+                    Write-Host "Unsupported compression type: $CompressionType"
+                    return
+                }
+            }
+
+            $ArchivePath = Join-Path -Path $DestinationPath -ChildPath "$ArchiveName$Extension"
+
+            Compress-Archive -Path $FolderPath -DestinationPath $ArchivePath -CompressionLevel Optimal -Force
             Write-Host "Folder compressed to: $ArchivePath"
         }
+
         Invoke-Safe -ScriptBlock $ScriptBlock
-    }   
+    }
 }
+
 
 function Resize-Folder {
     [CmdletBinding()]

@@ -1,5 +1,5 @@
-Import-Module -Name ".\ReusableTools\Utils\Invoke-Safe.psm1" -Force
-Import-Module -Name ".\ReusableTools\Utils\Validation-Utils.psm1" -Force
+Import-Module -Name ".\Module\Utils\Invoke-Safe.psm1" -Force
+Import-Module -Name ".\Module\Utils\Validation-Utils.psm1" -Force
 
 function New-File {
     [CmdletBinding()]
@@ -13,6 +13,7 @@ function New-File {
         $FileName,
 
         [Parameter(Mandatory = $true, Position = 2)]
+        [ValidateSet("txt", "xml", "html", "csv")]
         [string]
         $FileExtension,
 
