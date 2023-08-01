@@ -6,4 +6,5 @@ There are going to be multiple commits in order to keep track of the code being 
 3. Added a try catch block as a scriptblock
 4. Added validation method in order to improve readability and avoid redundancy in folder-utils.
 5. Updated the Copy-Folder and Create-File to create any file type.
-
+6. Verified functionalities for all the file functions
+7. Added admin privileges when the script is run
