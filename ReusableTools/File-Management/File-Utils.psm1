@@ -1,150 +1,177 @@
 Import-Module -Name ".\ReusableTools\Utils\Invoke-Safe.psm1" -Force
+Import-Module -Name ".\ReusableTools\Utils\Validation-Utils.psm1" -Force
 
-function New-TextFile {
+function New-File {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory, Position = 0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [string]
         $FilePath,
 
-        [Parameter(Mandatory, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]
+        $FileName,
+
+        [Parameter(Mandatory = $true, Position = 2)]
+        [string]
+        $FileExtension,
+
+        # Not Mandatory because a user could decide to create an empty file
+        [Parameter(Mandatory = $false, Position = 3)]
         [string]
         $Content
     )
 
-    $ScriptBlock = {
-        if (-not (Test-Path $FilePath)) {
-            $Content | Set-Content $FilePath
-            Write-Output $FilePath
-        }
-        else {
-            $confirmation = Read-Host "File already exists. Do you want to overwrite it? (Y/N)"
-            if ($confirmation -eq "Y") {
-                $Content | Set-Content $FilePath
-                Write-Output "File overwritten: $FilePath"
+    Process {
+        $ScriptBlock = {
+            $FullPath = "$FilePath\$FileName.$FileExtension"
+            if (-not (Test-PathExists -Path $FullPath -FileOnly)) {
+                $Content | Set-Content $FullPath
+                Write-Output $FullPath
             }
             else {
-                Write-Host "Operation canceled. File was not overwritten."
-                return
+                if (Confirm-Overwrite -DestinationPath $FullPath) {
+                    $Content | Set-Content $FullPath
+                    Write-Output "File overwritten: $FullPath"
+                }
+                else {
+                    Write-Host "Operation canceled. File was not overwritten."
+                }
             }
         }
+        Invoke-Safe -ScriptBlock $ScriptBlock    
     }
-
-    Invoke-Safe -ScriptBlock $ScriptBlock
 }
 
 function Copy-File {
+    [CmdletBinding()]
     param (
-        [string]$SourceFilePath,
-        [string]$DestinationFolderPath
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]
+        $SourceFilePath,
+
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]
+        $DestinationFilePath
     )
 
-    $ScriptBlock = {
-        param (
-            [string]$SourcePath,
-            [string]$DestinationPath
-        )
-
-        if (Test-Path $SourcePath -PathType Leaf) {
-            if (-not (Test-Path $DestinationPath -PathType Container)) {
-                Write-Host "Destination folder does not exist: $DestinationPath"
-                return
-            }
-
-            $destinationFileName = (Split-Path -Leaf $SourcePath)
-            $destinationPath = Join-Path -Path $DestinationPath -ChildPath $destinationFileName
-
-            if (Test-Path $destinationPath -PathType Leaf) {
-                $confirmation = Read-Host "Destination file already exists. Do you want to overwrite it? (Y/N)"
-                if ($confirmation -ne "Y") {
-                    Write-Host "Operation canceled. Destination file was not overwritten."
+    Process {
+        $ScriptBlock = {
+            if (Test-Path $SourceFilePath -PathType Leaf) {
+                if (-not (Test-Path $DestinationFilePath -PathType Container)) {
+                    Write-Host "Destination folder does not exist: $DestinationFilePath"
                     return
                 }
-                else {
-                    Remove-Item $destinationPath -Force
+    
+                $DestinationFileName = (Split-Path -Leaf $SourceFilePath)
+                $FullDestinationFilePath = Join-Path -Path $DestinationFilePath -ChildPath $DestinationFileName
+    
+                if (Test-Path $FullDestinationFilePath -PathType Leaf) {
+                    $confirmation = Read-Host "Destination file already exists. Do you want to overwrite it? (Y/N)"
+                    if ($confirmation -ne "Y") {
+                        Write-Host "Operation canceled. Destination file was not overwritten."
+                        return
+                    }
+                    else {
+                        Remove-Item $FullDestinationFilePath -Force
+                    }
                 }
+    
+                Copy-Item $SourceFilePath -Destination $FullDestinationFilePath
+                Write-Host "File copied from $SourceFilePath to $FullDestinationFilePath"
             }
-
-            Copy-Item $SourcePath -Destination $destinationPath
-            Write-Host "File copied from $SourcePath to $destinationPath"
+            else {
+                Write-Host "Source file does not exist: $SourceFilePath"
+            }
         }
-        else {
-            Write-Host "Source file does not exist: $SourcePath"
-        }
+        Invoke-Safe -ScriptBlock $ScriptBlock      
     }
-
-    Invoke-Safe -ScriptBlock $ScriptBlock -ArgumentList $SourceFilePath, $DestinationFolderPath
 }
 
-
-
 function Remove-File {
+    [CmdletBinding()]
     param (
-        [string]$FilePath
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]
+        $FilePath
     )
 
-    $ScriptBlock = {
-        if (Test-Path $FilePath -PathType Leaf) {
-            Remove-Item $FilePath -Force
-            Write-Host "File deleted: $FilePath"
+    Process {
+        $ScriptBlock = {
+            if (Test-Path $FilePath -PathType Leaf) {
+                Remove-Item $FilePath -Force
+                Write-Host "File deleted: $FilePath"
+            }
+            else {
+                Write-Host "File not found: $FilePath"
+            }
         }
-        else {
-            Write-Host "File not found: $FilePath"
-        }
+        Invoke-Safe -ScriptBlock $ScriptBlock     
     }
-
-    Invoke-Safe -ScriptBlock $ScriptBlock
 }
 
 function Move-File {
+    [CmdletBinding()]
     param (
-        [string]$SourceFilePath,
-        [string]$DestinationParentFolderPath
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]
+        $SourceFilePath,
+
+        [Parameter(Mandatory, Position = 1)]
+        [string]
+        $DestinationParentFolderPath
     )
 
-    $ScriptBlock = {
-        if (Test-Path $SourceFilePath -PathType Leaf) {
-            $destinationPath = Join-Path -Path $DestinationParentFolderPath -ChildPath (Split-Path -Leaf $SourceFilePath)
-
-            if (Test-Path $destinationPath -PathType Leaf) {
-                $confirmation = Read-Host "Destination file already exists. Do you want to overwrite it? (Y/N)"
-                if ($confirmation -ne "Y") {
-                    Write-Host "Operation canceled. Destination file was not overwritten."
-                    return
+    Process {
+        $ScriptBlock = {
+            if (Test-Path $SourceFilePath -PathType Leaf) {
+                $DestinationPath = Join-Path -Path $DestinationParentFolderPath -ChildPath (Split-Path -Leaf $SourceFilePath)
+    
+                if (Test-Path $DestinationPath -PathType Leaf) {
+                    $confirmation = Read-Host "Destination file already exists. Do you want to overwrite it? (Y/N)"
+                    if ($confirmation -ne "Y") {
+                        Write-Host "Operation canceled. Destination file was not overwritten."
+                        return
+                    }
                 }
+    
+                Move-Item $SourceFilePath -Destination $DestinationPath
+                Write-Host "File moved to: $DestinationPath"
             }
-
-            Move-Item $SourceFilePath -Destination $destinationPath
-            Write-Host "File moved to: $destinationPath"
+            else {
+                Write-Host "Source file not found: $SourceFilePath"
+            }
         }
-        else {
-            Write-Host "Source file not found: $SourceFilePath"
-        }
+        Invoke-Safe -ScriptBlock $ScriptBlock
     }
-
-    Invoke-Safe -ScriptBlock $ScriptBlock
 }
 
-
 function Rename-File {
+    [CmdletBinding()]
     param (
-        [string]$FilePath,
-        [string]$NewName
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]
+        $FilePath,
+
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]
+        $NewName
     )
 
-    $ScriptBlock = {
-        if (Test-Path $FilePath -PathType Leaf) {
-            $newPath = Join-Path -Path (Split-Path -Parent $FilePath) -ChildPath $NewName
-            Rename-Item $FilePath -NewName $NewName
-            Write-Host "File renamed to: $newPath"
+    Process {
+        $ScriptBlock = {
+            if (Test-Path $FilePath -PathType Leaf) {
+                $NewPath = Join-Path -Path (Split-Path -Parent $FilePath) -ChildPath $NewName
+                Rename-Item $FilePath -NewName $NewName
+                Write-Host "File renamed to: $NewPath"
+            }
+            else {
+                Write-Host "File not found: $FilePath"
+            }
         }
-        else {
-            Write-Host "File not found: $FilePath"
-        }
+        Invoke-Safe -ScriptBlock $ScriptBlock
     }
-
-    Invoke-Safe -ScriptBlock $ScriptBlock
 }
 
 # Export all functions for the module
-Export-ModuleMember -Function * 
+Export-ModuleMember -Function *

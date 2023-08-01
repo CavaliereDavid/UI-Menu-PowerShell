@@ -26,8 +26,8 @@ function New-Folder {
                 }
             }
             else {
-                $confirmation = Read-Host "Folder does not exist. Do you want to create it? (Y/N)"
-                if ($confirmation -ne "Y") {
+                $Confirmation = Read-Host "Folder does not exist. Do you want to create it? (Y/N)"
+                if ($Confirmation -ne "Y") {
                     Write-Host "Operation canceled. Folder was not created."
                     return
                 }
@@ -41,7 +41,7 @@ function New-Folder {
     }
 }
 
-function Move-Folder {
+function Copy-Folder {
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
@@ -65,21 +65,21 @@ function Move-Folder {
                 return
             }
 
-            $destinationFolderName = (Split-Path -Leaf $SourceFolderPath)
-            $destinationPath = Join-Path -Path $DestinationParentFolderPath -ChildPath $destinationFolderName
+            $DestinationFolderName = (Split-Path -Leaf $SourceFolderPath)
+            $DestinationPath = Join-Path -Path $DestinationParentFolderPath -ChildPath $DestinationFolderName
 
-            if (Test-PathExists -Path $destinationPath -DirectoryOnly) {
-                if (-not (Confirm-Overwrite -DestinationPath $destinationPath)) {
+            if (Test-PathExists -Path $DestinationPath -DirectoryOnly) {
+                if (-not (Confirm-Overwrite -DestinationPath $DestinationPath)) {
                     Write-Host "Operation canceled. Destination folder was not overwritten."
                     return
                 }
                 else {
-                    Remove-Item $destinationPath -Recurse -Force
+                    Remove-Item $DestinationPath -Recurse -Force
                 }
             }
 
-            Move-Item $SourceFolderPath -Destination $destinationPath
-            Write-Host "Folder moved to: $destinationPath"
+            Copy-Item $SourceFolderPath -Destination $DestinationPath -Recurse
+            Write-Host "Folder moved to: $DestinationPath"
         }
 
         Invoke-Safe -ScriptBlock $ScriptBlock      
@@ -134,19 +134,19 @@ function Move-Folder {
                 return
             }
     
-            $destinationFolderName = (Split-Path -Leaf $SourceFolderPath)
-            $destinationPath = Join-Path -Path $DestinationParentFolderPath -ChildPath $destinationFolderName
+            $DestinationFolderName = (Split-Path -Leaf $SourceFolderPath)
+            $DestinationPath = Join-Path -Path $DestinationParentFolderPath -ChildPath $DestinationFolderName
     
-            if (Test-PathExists -Path $destinationPath -DirectoryOnly) {
-                if (-not (Confirm-Overwrite -DestinationPath $destinationPath)) {
+            if (Test-PathExists -Path $DestinationPath -DirectoryOnly) {
+                if (-not (Confirm-Overwrite -DestinationPath $DestinationPath)) {
                     return
                 }
                 else {
-                    Remove-Item $destinationPath -Recurse -Force
+                    Remove-Item $DestinationPath -Recurse -Force
                 }
             }
-            Move-Item $SourceFolderPath -Destination $destinationPath
-            Write-Host "Folder moved to: $destinationPath"
+            Move-Item $SourceFolderPath -Destination $DestinationPath
+            Write-Host "Folder moved to: $DestinationPath"
         }
         Invoke-Safe -ScriptBlock $ScriptBlock      
     } 
@@ -170,9 +170,9 @@ function Rename-Folder {
                 Write-Host "Folder not found: $FolderPath"
                 return
             }
-            $newPath = Join-Path -Path (Split-Path -Parent $FolderPath) -ChildPath $NewName
+            $NewPath = Join-Path -Path (Split-Path -Parent $FolderPath) -ChildPath $NewName
             Rename-Item $FolderPath -NewName $NewName
-            Write-Host "Folder renamed to: $newPath"
+            Write-Host "Folder renamed to: $NewPath"
         }
         Invoke-Safe -ScriptBlock $ScriptBlock
     }
@@ -194,9 +194,9 @@ function Compress-Folder {
                 Write-Host "Folder not found: $FolderPath"
                 return
             }
-            $archivePath = Join-Path -Path (Split-Path -Parent $FolderPath) -ChildPath "$([System.IO.Path]::GetFileNameWithoutExtension($FolderPath)).zip"
-            Compress-Archive -Path $FolderPath -DestinationPath $archivePath
-            Write-Host "Folder compressed to: $archivePath"
+            $ArchivePath = Join-Path -Path (Split-Path -Parent $FolderPath) -ChildPath "$([System.IO.Path]::GetFileNameWithoutExtension($FolderPath)).zip"
+            Compress-Archive -Path $FolderPath -DestinationPath $ArchivePath
+            Write-Host "Folder compressed to: $ArchivePath"
         }
         Invoke-Safe -ScriptBlock $ScriptBlock
     }   
@@ -226,21 +226,21 @@ function Resize-Folder {
                 return
             }
 
-            $archiveFileName = Split-Path -Leaf $ArchivePath
-            $folderName = $archiveFileName -replace '\.zip$'  
-            $destinationFolder = Join-Path -Path $DestinationPath -ChildPath $folderName
-            if (Test-PathExists -Path $destinationFolder -DirectoryOnly) {
-                if (-not (Confirm-Overwrite -DestinationPath $destinationFolder)) {
+            $ArchiveFileName = Split-Path -Leaf $ArchivePath
+            $FolderName = $ArchiveFileName -replace '\.zip$'  
+            $DestinationFolder = Join-Path -Path $DestinationPath -ChildPath $FolderName
+            if (Test-PathExists -Path $DestinationFolder -DirectoryOnly) {
+                if (-not (Confirm-Overwrite -DestinationPath $DestinationFolder)) {
                     Write-Host "Operation canceled. Folder was not extracted or overwritten."
                     return
                 }
                 else {
-                    Remove-Item $destinationFolder -Recurse -Force
+                    Remove-Item $DestinationFolder -Recurse -Force
                 }
             }
 
             Expand-Archive -LiteralPath $ArchivePath -DestinationPath $DestinationPath
-            Write-Host "Folder extracted to: $destinationFolder"
+            Write-Host "Folder extracted to: $DestinationFolder"
         }
 
         Invoke-Safe -ScriptBlock $ScriptBlock
